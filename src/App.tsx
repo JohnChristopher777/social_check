@@ -446,13 +446,10 @@ export default function App() {
                   animate={{ opacity: 1 }}
                   className="bg-[#0b061d]/50 border-2 border-[#1a1040] border-dashed rounded-2xl h-full flex flex-col items-center justify-center min-h-[500px] text-center p-8 relative shadow-2xl"
                 >
-                  <div className="w-20 h-20 rounded-2xl bg-[#050114] border border-white/10 flex items-center justify-center mb-6 shadow-lg relative z-10">
-                    <ShieldCheck className="w-10 h-10 text-[#AD55FF] opacity-80" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">
-                    System Ready
+                  <h3 className="text-3xl font-bold text-[#e2c3ff] mb-10">
+                    System Ready !
                   </h3>
-                  <p className="text-slate-300 font-medium text-sm max-w-md leading-relaxed relative z-10">
+                  <p className="text-slate-300 font-medium text-lg max-w-md leading-relaxed relative z-10">
                     Input text, URL, or upload media on the left. The engine
                     will evaluate structural and physical security threats.
                   </p>
@@ -661,7 +658,7 @@ function ResultDashboard({ result }: { result: AnalysisResult }) {
         
         {result.contentSummary && (
           <div className="bg-white/5 border border-white/10 p-4 rounded-xl shadow-inner">
-            <h3 className="text-[11px] font-bold text-[#1DA1F2] uppercase tracking-widest mb-2 flex items-center gap-2">
+            <h3 className="text-[14px] font-bold text-[#1DA1F2] tracking-wide mb-2 flex items-center gap-2">
               <FileImage className="w-4 h-4" /> Post Content Summary
             </h3>
             <p className="text-[14px] text-slate-300 font-medium leading-relaxed">
@@ -672,7 +669,7 @@ function ResultDashboard({ result }: { result: AnalysisResult }) {
 
         {result.recommendations.length > 0 && (
           <div>
-            <h3 className="text-[11px] font-bold text-[#D9AAFF] uppercase tracking-widest mb-4 flex items-center gap-2 px-1">
+            <h3 className="text-[14px] font-bold text-[#D9AAFF] tracking-wide mb-4 flex items-center gap-2 px-1">
               <Activity className="w-4 h-4" /> Actionable Requirements
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -693,7 +690,7 @@ function ResultDashboard({ result }: { result: AnalysisResult }) {
 
         {result.actionableImprovements && result.actionableImprovements.length > 0 && (
           <div>
-            <h3 className="text-[11px] font-bold text-[#00FF88] uppercase tracking-widest mb-4 flex items-center gap-2 px-1 mt-6">
+            <h3 className="text-[14px] font-bold text-[#07ba67] tracking-wide mb-4 flex items-center gap-2 px-1 mt-6">
               <Link className="w-4 h-4" /> Content Actionable Improvements
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
