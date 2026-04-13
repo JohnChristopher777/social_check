@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+# Python Environments
+venv/
+__pycache__/
+*.pyc
+
+# ML Evaluations
+backend/evaluations/
+
+# OS Files
+.DS_Store
+Thumbs.db
