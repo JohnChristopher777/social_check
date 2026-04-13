@@ -678,7 +678,7 @@ function ResultDashboard({ result }: { result: AnalysisResult }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {result.recommendations.map((rec: string, i: number) => (
                 <div
-                  key={Math.random()}
+                  key={i}
                   className="p-4 bg-black/40 border border-[#AD55FF]/30 rounded-xl flex items-start gap-4 shadow-inner"
                 >
                   <div className="w-2.5 h-2.5 rounded-full bg-[#AD55FF] mt-[5px] shrink-0 shadow-[0_0_8px_#AD55FF]" />
@@ -699,7 +699,7 @@ function ResultDashboard({ result }: { result: AnalysisResult }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {result.actionableImprovements.map((imp: string, i: number) => (
                 <div
-                  key={Math.random()}
+                  key={i}
                   className="p-4 bg-[#00FF88]/5 border border-[#00FF88]/30 rounded-xl flex items-start gap-4 shadow-inner"
                 >
                   <div className="w-2.5 h-2.5 rounded-full bg-[#00FF88] mt-[5px] shrink-0 shadow-[0_0_8px_#00FF88]" />
