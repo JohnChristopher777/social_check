@@ -110,7 +110,8 @@ export const analyzeContent = async (params: AnalyzeParams): Promise<AnalysisRes
       formData.append("image", params.imageFile);
     }
 
-    const res = await fetch("http://127.0.0.1:8000/api/analyze", {
+    const apiUrl = import.meta.env.VITE_API_URL || "https://social-check.onrender.com";
+    const res = await fetch(`${apiUrl}/api/analyze`, {
       method: "POST",
       body: formData,
     });

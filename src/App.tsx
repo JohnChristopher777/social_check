@@ -25,7 +25,6 @@ import {
   Check,
   LucideIcon,
   X,
-
 } from "lucide-react";
 
 import { cn } from "./lib/utils";
@@ -38,14 +37,21 @@ import {
 import { Aura } from "./components/Aura";
 import { Splash } from "./components/Splash";
 import GuidelinesPage from "./components/GuidelinesPage";
+import DocumentCharts from "./components/DocumentCharts";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-// Extracted GuidelinesPage to dedicated Component
+import { AuthModal } from "./components/AuthModal";
+import { Profile } from "./components/Profile";
+import { useAuth } from "./contexts/AuthContext";
+import { saveAnalysisToHistory } from "./lib/db";
+import { User } from "lucide-react";
 
 export default function App() {
+  const { currentUser } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
-  const [view, setView] = useState<"analyzer" | "guidelines">("analyzer");
+  const [view, setView] = useState<"analyzer" | "guidelines" | "charts" | "profile">("analyzer");
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Form State
   const [postUrl, setPostUrl] = useState("");
@@ -113,6 +119,24 @@ export default function App() {
 
     setAnalyzing(false);
     setResult(finalResult);
+
+    // Save history if user is logged in
+    if (currentUser) {
+       await saveAnalysisToHistory(
+         currentUser.uid,
+         text || "No text provided",
+         platform,
+         finalScoreCalculation(finalResult), // Wait, finalResult doesn't directly export score if we calculate it in ai.ts. 
+         finalResult
+       );
+    }
+  };
+
+  // Helper to extract the mathematically correct score from result detections
+  const finalScoreCalculation = (res: AnalysisResult) => {
+      let score = 100;
+      res.detections.forEach(d => score -= d.risk);
+      return score;
   };
 
   const clearForm = () => {
@@ -127,7 +151,8 @@ export default function App() {
     if (!postUrl) return;
     setIsScraping(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/scrape_post", {
+      const apiUrl = import.meta.env.VITE_API_URL || "https://social-check.onrender.com";
+      const res = await fetch(`${apiUrl}/api/scrape_post`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: postUrl })
@@ -179,18 +204,46 @@ export default function App() {
           </div>
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => setView("guidelines")}
-              className="text-sm font-bold px-3 py-1 rounded-full bg-[#AD55FF]/20 border border-[#AD55FF]/30 text-[#D9AAFF]  hover:bg-[#1DA1F2]/20 transition-all shadow-sm"
+              onClick={() => setView("charts")}
+              className="hidden sm:block text-sm font-bold px-3 py-1 rounded-full bg-[#1DA1F2]/20 border border-[#1DA1F2]/30 text-[#a9deff] hover:bg-[#1DA1F2]/40 transition-all shadow-sm"
             >
-              Profile Guidelines
+              Visualizations
             </button>
+            <button 
+              onClick={() => setView("guidelines")}
+              className="text-sm font-bold px-3 py-1 rounded-full bg-[#AD55FF]/20 border border-[#AD55FF]/30 text-[#D9AAFF] hover:bg-[#AD55FF]/40 transition-all shadow-sm"
+            >
+              Guidelines
+            </button>
+            {currentUser ? (
+              <button 
+                onClick={() => setView("profile")}
+                className="text-sm font-bold px-3 py-1 flex items-center gap-1.5 rounded-full bg-[#00FF88]/20 border border-[#00FF88]/30 text-[#00FF88] hover:bg-[#00FF88]/40 transition-all shadow-sm"
+              >
+                <User className="w-4 h-4" /> Profile
+              </button>
+            ) : (
+              <button 
+                onClick={() => setIsAuthModalOpen(true)}
+               className="text-sm font-bold px-3 py-1 rounded-full bg-yellow-400/20 border border-yellow-400/30 text-yellow-200 backdrop-blur-md hover:bg-yellow-400/40 transition-all shadow-sm"
+              >
+                <User size={20} />
+              </button>
+            )}
           </div>
         </div>
       </nav>
 
       <div className="h-24" />
 
-      <div className="relative z-10 container mx-auto px-4 w-full max-w-7xl flex flex-col gap-6 lg:gap-8 flex-1">
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+
+      {view === "guidelines" && <GuidelinesPage onBack={() => setView("analyzer")} />}
+      {view === "charts" && <DocumentCharts onBack={() => setView("analyzer")} />}
+      {view === "profile" && <div className="container mx-auto px-4"><Profile /></div>}
+      
+      {view === "analyzer" && (
+        <div className="relative z-10 container mx-auto px-4 w-full max-w-7xl flex flex-col gap-6 lg:gap-8 flex-1">
         <main className="grid grid-cols-1 xl:grid-cols-12 gap-8 min-h-[600px]">
           {/* Input Section */}
           <section className="xl:col-span-5 flex flex-col gap-6 h-full">
@@ -373,14 +426,14 @@ export default function App() {
                   <button
                     onClick={clearForm}
                     disabled={analyzing || (!text && !filePreview && !postUrl)}
-                    className="px-8 py-4 rounded-xl text-[12px] font-black text-red-300 hover:text-red-500 bg-[#390202] border border-transparent hover:border-white/10 transition-all disabled:opacity-30 disabled:pointer-events-none tracking-widest shadow-md"
+                    className="px-8 py-4 rounded-xl text-[12px] font-black text-red-300 hover:text-red-500 bg-[#390202] border border-transparent hover:border-white/10 transition-all disabled:opacity-30 disabled:pointer-events-none tracking-wide shadow-md"
                   >
                     Clear
                   </button>
                   <button
                     onClick={handleAnalyze}
                     disabled={analyzing || (!text && !filePreview && !postUrl)}
-                    className="flex-1 px-6 py-4 rounded-xl text-[12px] font-black text-white/90 hover:text-white bg-gradient-to-r from-[#200075] via-[#2F119C] to-[#125B95] shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-3 tracking-widest relative overflow-hidden group border border-[#1DA1F2]/20"
+                    className="flex-1 px-6 py-4 rounded-xl text-[12px] font-black text-white/90 hover:text-white bg-gradient-to-r from-[#200075] via-[#2F119C] to-[#125B95] shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-3 tracking-wide relative overflow-hidden group border border-[#1DA1F2]/20"
                   >
                     <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.1)_50%,transparent_100%)] w-[200%] -translate-x-full group-hover:animate-shine" />
                     {analyzing ? (
@@ -390,8 +443,7 @@ export default function App() {
                       </>
                     ) : (
                       <>
-                        <TextSearch className="w-5 h-5 text-slate-300" /> Scan
-                        Post
+                        <TextSearch className="w-5 h-5 text-slate-50" /> Scan Post
                       </>
                     )}
                   </button>
@@ -460,7 +512,7 @@ export default function App() {
         </main>
       </div>
 
-      {view === "guidelines" && <GuidelinesPage onBack={() => setView("analyzer")} />}
+      )}
 
       <style>{`
         ::-webkit-scrollbar { width: 6px; }
