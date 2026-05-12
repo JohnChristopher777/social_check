@@ -17,6 +17,25 @@ export interface AnalysisResult {
   originalText: string;
 }
 
+// Dynamic API Routing: Pings local server, falls back to Cloud if offline
+export const getApiUrl = async (): Promise<string> => {
+  const cloudUrl = import.meta.env.VITE_API_URL || "https://social-check.onrender.com";
+  
+  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 800); // 800ms quick ping
+      
+      await fetch("http://127.0.0.1:8000/", { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return "http://127.0.0.1:8000"; // Local server is alive
+    } catch (e) {
+      return cloudUrl; // Local server offline, use Cloud
+    }
+  }
+  return cloudUrl;
+};
+
 export interface AnalyzeParams {
   text: string;
   url: string;
@@ -102,19 +121,27 @@ export const analyzeContent = async (params: AnalyzeParams): Promise<AnalysisRes
     const formData = new FormData();
     if (params.text && params.text !== "No data provided") {
       formData.append("text", params.text);
-    }
-    if (params.url) {
+    } else if (params.url) {
+      // Only send URL to backend for scraping if frontend hasn't already scraped the text
       formData.append("url", params.url);
     }
+    
     if (params.imageFile) {
       formData.append("image", params.imageFile);
     }
 
-    const apiUrl = import.meta.env.VITE_API_URL || "https://social-check.onrender.com";
+    const apiUrl = await getApiUrl();
+        
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
+
     const res = await fetch(`${apiUrl}/api/analyze`, {
       method: "POST",
       body: formData,
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
 
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
@@ -334,14 +361,14 @@ export const analyzeContent = async (params: AnalyzeParams): Promise<AnalysisRes
       level: 'High Risk',
       detections: [{ 
         type: 'other', 
-        match: 'System Offline', 
+        match: 'System Offline or Timeout', 
         risk: 100, 
         description: 'API Connection Failed', 
-        illEffect: `Network Error: ${error instanceof Error ? error.message : "Connection Refused"}` 
+        illEffect: `Network Error: ${error instanceof Error ? error.message : "Connection Refused or Timeout"}` 
       }],
       recommendations: [
-        "Network Failed: Could not reach the FastAPI backend at 127.0.0.1:8000.",
-        "Fix: Ensure your server is active by running: uvicorn main:app --reload --host 127.0.0.1 --port 8000"
+        "Network Failed: The AI Engine took too long to respond or is completely offline.",
+        "Fix: Ensure your server is active (uvicorn main:app) and your internet connection is stable."
       ],
       contentSummary: "Failed to parse content. Network Unreachable.",
       actionableImprovements: ["Re-verify backend APIs and network tunneling.", "Check uvicorn logs for internal crashes."],

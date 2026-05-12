@@ -41,15 +41,17 @@ export const getUserHistory = async (userId: string): Promise<SavedAnalysis[]> =
   try {
     const q = query(
       collection(db, "analysis_history"), 
-      where("userId", "==", userId),
-      orderBy("timestamp", "desc")
+      where("userId", "==", userId)
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    const results = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       timestamp: doc.data().timestamp.toDate()
     })) as SavedAnalysis[];
+    
+    // Sort descending by timestamp client-side to avoid Firebase Composite Index requirement
+    return results.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   } catch (error) {
     console.error("Error fetching history: ", error);
     throw error;

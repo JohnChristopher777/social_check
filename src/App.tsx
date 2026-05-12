@@ -33,6 +33,7 @@ import {
   AnalysisResult,
   Detection,
   sampleDataList,
+  getApiUrl
 } from "./services/ai";
 import { Aura } from "./components/Aura";
 import { Splash } from "./components/Splash";
@@ -106,29 +107,37 @@ export default function App() {
     setResult(null);
 
     const isImagePresent = !!file || !!filePreview;
-    const finalResult = await analyzeContent({
-      text: text || "No data provided",
-      url: postUrl,
-      hasImage: isImagePresent,
-      isPublic,
-      isFrequent,
-      platform,
-      hasLocationTag,
-      imageFile: file,
-    });
+    
+    try {
+      const finalResult = await analyzeContent({
+        text: text || "No data provided",
+        url: postUrl,
+        hasImage: isImagePresent,
+        isPublic,
+        isFrequent,
+        platform,
+        hasLocationTag,
+        imageFile: file,
+      });
 
-    setAnalyzing(false);
-    setResult(finalResult);
+      setResult(finalResult);
 
-    // Save history if user is logged in
-    if (currentUser) {
-       await saveAnalysisToHistory(
-         currentUser.uid,
-         text || "No text provided",
-         platform,
-         finalScoreCalculation(finalResult), // Wait, finalResult doesn't directly export score if we calculate it in ai.ts. 
-         finalResult
-       );
+      // Attempt to save history asynchronously without blocking the UI
+      if (currentUser) {
+        saveAnalysisToHistory(
+           currentUser.uid,
+           text || "No text provided",
+           platform,
+           finalScoreCalculation(finalResult),
+           finalResult
+        ).catch(dbError => {
+           console.error("Failed to save to Firestore (Check Firebase Rules):", dbError);
+        });
+      }
+    } catch (error) {
+      console.error("Analysis engine failed:", error);
+    } finally {
+      setAnalyzing(false);
     }
   };
 
@@ -151,12 +160,18 @@ export default function App() {
     if (!postUrl) return;
     setIsScraping(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "https://social-check.onrender.com";
+      const apiUrl = await getApiUrl();
+          
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s max wait time
+
       const res = await fetch(`${apiUrl}/api/scrape_post`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: postUrl })
+        body: JSON.stringify({ url: postUrl }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (data.text) setText(data.text);
       if (data.image && data.image !== "null") {
@@ -240,7 +255,7 @@ export default function App() {
 
       {view === "guidelines" && <GuidelinesPage onBack={() => setView("analyzer")} />}
       {view === "charts" && <DocumentCharts onBack={() => setView("analyzer")} />}
-      {view === "profile" && <div className="container mx-auto px-4"><Profile /></div>}
+      {view === "profile" && <div className="container mx-auto px-4"><Profile onBack={() => setView("analyzer")} /></div>}
       
       {view === "analyzer" && (
         <div className="relative z-10 container mx-auto px-4 w-full max-w-7xl flex flex-col gap-6 lg:gap-8 flex-1">

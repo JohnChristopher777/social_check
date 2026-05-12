@@ -54,9 +54,9 @@ export default function DocumentCharts({ onBack }: { onBack?: () => void }) {
   };
 
   const data61 = [
-    { name: "Safe", count: 850, fill: "#00FF88" },
-    { name: "Moderate", count: 320, fill: "#FFD700" },
-    { name: "High", count: 140, fill: "#FF0055" },
+    { name: "Safe", count: 85, fill: "#00FF88" },
+    { name: "Moderate", count: 32, fill: "#FFD700" },
+    { name: "High", count: 14, fill: "#FF0055" },
   ];
 
   const data62 = [
@@ -82,7 +82,7 @@ export default function DocumentCharts({ onBack }: { onBack?: () => void }) {
   ];
 
   return (
-    <div className="w-full min-h-screen text-white p-8 pb-24 bg-gradient-to-br from-[#4A00E0] via-[#0A0524] to-[#8E2DE2]">
+    <div className="w-full text-white pb-24 relative z-10 pt-4 px-4 sm:px-8">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>

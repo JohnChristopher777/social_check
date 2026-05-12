@@ -2,31 +2,33 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserHistory, deleteAnalysis, SavedAnalysis } from '../lib/db';
-import { Trash2, Loader2, Calendar, ShieldCheck, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Trash2, Loader2, Calendar, ShieldCheck, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export const Profile: React.FC = () => {
+export const Profile: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const { currentUser, logout } = useAuth();
   const [history, setHistory] = useState<SavedAnalysis[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (currentUser) {
-      loadHistory();
-    }
-  }, [currentUser]);
+    const fetchHistory = async () => {
+      if (!currentUser) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const data = await getUserHistory(currentUser.uid);
+        setHistory(data);
+      } catch (error) {
+        console.error("Failed to fetch history", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const loadHistory = async () => {
-    try {
-      const data = await getUserHistory(currentUser!.uid);
-      setHistory(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchHistory();
+  }, [currentUser]);
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -45,9 +47,19 @@ export const Profile: React.FC = () => {
   return (
     <div className="w-full max-w-5xl mx-auto mt-8 space-y-6 relative z-10">
       <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">Agent Profile</h2>
-          <p className="text-slate-400 mt-1">{currentUser.email}</p>
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all"
+            >
+              <ArrowLeft className="w-5 h-5 text-slate-300" />
+            </button>
+          )}
+          <div>
+            <h2 className="text-2xl font-bold text-white tracking-tight">User Profile</h2>
+            <p className="text-slate-400 mt-1">{currentUser.email}</p>
+          </div>
         </div>
         <button
           onClick={logout}
@@ -63,15 +75,17 @@ export const Profile: React.FC = () => {
         </h3>
 
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <Loader2 className="w-8 h-8 text-[#AD55FF] animate-spin" />
-          </div>
-        ) : history.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-            <ShieldAlert className="w-12 h-12 mb-4 opacity-50" />
-            <p>No historical analysis records found.</p>
-          </div>
-        ) : (
+        <div className="flex flex-col items-center justify-center py-20 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+          <Loader2 className="w-8 h-8 text-[#AD55FF] animate-spin mb-4" />
+          <p className="text-slate-400">Decrypting user history...</p>
+        </div>
+      ) : history.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+          <ShieldCheck className="w-12 h-12 text-slate-500 mb-4 opacity-50" />
+          <p className="text-slate-300 font-medium text-lg">No analysis history found.</p>
+          <p className="text-slate-500 text-sm mt-1">Run an analysis from the dashboard to save your results here.</p>
+        </div>
+      ) : (
           <div className="space-y-4">
             {history.map((record) => (
               <motion.div

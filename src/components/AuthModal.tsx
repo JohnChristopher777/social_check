@@ -53,7 +53,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         </button>
 
         <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">
-          {isLogin ? 'Secure Access' : 'Create Profile'}
+          {isLogin ? 'Secure Login' : 'Create Profile'}
         </h2>
 
         {error && (
@@ -73,7 +73,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#AD55FF] transition-all"
-                placeholder="agent@domain.com"
+                placeholder="user@domain.com"
               />
             </div>
           </div>
