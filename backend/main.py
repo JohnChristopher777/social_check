@@ -16,11 +16,34 @@ image_engine = ImageAnalyzer()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        "https://socialcheck1.netlify.app",
+        "https://socialcheck1.netlify.app/",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:5174",
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+import re
+
+def sanitize_text(val: Optional[str]) -> str:
+    if not val:
+        return ""
+    # Strip any HTML/XML tags to prevent script/markup injection
+    return re.sub(r'<[^>]*>', '', val).strip()
+
+def sanitize_url(val: Optional[str]) -> str:
+    if not val:
+        return ""
+    val = val.strip()
+    # Enforce safe URL protocol prefix (HTTP/HTTPS) to block javascript: and data: attacks
+    if val and not (val.startswith("http://") or val.startswith("https://")):
+        return ""
+    return val
 
 class AnalysisResponse(BaseModel):
     risk_score: int
@@ -37,7 +60,8 @@ class ScrapeRequest(BaseModel):
 
 @app.post("/api/scrape_post")
 async def scrape_post_api(req: ScrapeRequest):
-    return smart_scrape(req.url)
+    clean_url = sanitize_url(req.url)
+    return smart_scrape(clean_url)
 
 @app.post("/api/analyze", response_model=AnalysisResponse)
 async def analyze_content(
@@ -45,13 +69,15 @@ async def analyze_content(
     url: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None)
 ):
+    clean_text = sanitize_text(text)
+    clean_url = sanitize_url(url)
     
-    data_text = text or ""
+    data_text = clean_text
     scraper_failed = False
     
-    if url:
-        print(f"Scrape request received for URL: {url}")
-        scraped_data = safe_scrape(url)
+    if clean_url:
+        print(f"Scrape request received for URL: {clean_url}")
+        scraped_data = safe_scrape(clean_url)
         
         if scraped_data:
             data_text += f"\n[SCRAPED CONTENT]\n{scraped_data}"
