@@ -202,9 +202,16 @@ export const analyzeContent = async (params: AnalyzeParams): Promise<AnalysisRes
           } else if (r.includes('Real human face') || r.includes('Public face')) {
               // If AI image is detected in the caption, override the deepfake warning.
               if (isAIImage) return; 
-              detType = 'face'; rsk = 15;
-              effect = 'Deepfake Vulnerability: Exposed facial topography is downloaded by AI threat actors to synthesize video-call impersonations to family/banks.';
-              rec = 'Visibility Audit: Consider setting clear facial exposure posts to "Friends Only".';
+              
+              if (params.isPublic) {
+                detType = 'face'; rsk = 15;
+                effect = 'Deepfake Vulnerability: Exposed facial topography is downloaded by AI threat actors to synthesize video-call impersonations to family/banks.';
+                rec = 'Visibility Audit: Consider setting clear facial exposure posts to "Friends Only" or restricted visibility.';
+              } else {
+                detType = 'face'; rsk = 5; // Lower risk for private posts
+                effect = 'Deepfake Vulnerability (Mitigated): Post is marked Private, reducing mass-scraping exposure.';
+                rec = 'Privacy Confirmed: This post is private. Ensure that your followers are restricted to trustable people only.';
+              }
           } else if (r.includes('Machine-readable Data') || r.includes('Visual Text')) {
               detType = 'document'; rsk = 30;
               effect = 'Barcode/OCR Exploitation: Threat actors extract unencrypted Passenger Name Records (PNR), passwords on sticky notes, and proprietary routing numbers from images.';

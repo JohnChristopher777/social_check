@@ -106,8 +106,20 @@ export default function App() {
     setAnalyzing(true);
     setResult(null);
 
-    const isImagePresent = !!file || !!filePreview;
-    
+    let uploadFile = file;
+    // If no physical file was uploaded but a preview URL exists (from Scraper or Load Scenario), convert it to a File object
+    if (!uploadFile && filePreview && filePreview.startsWith("http")) {
+      try {
+        const response = await fetch(filePreview);
+        const blob = await response.blob();
+        uploadFile = new File([blob], "auto_filled_image.jpg", { type: blob.type || "image/jpeg" });
+      } catch (err) {
+        console.warn("Could not fetch remote image for AI analysis:", err);
+      }
+    }
+
+    const isImagePresent = !!uploadFile || !!filePreview;
+
     try {
       const finalResult = await analyzeContent({
         text: text || "No data provided",
@@ -117,7 +129,7 @@ export default function App() {
         isFrequent,
         platform,
         hasLocationTag,
-        imageFile: file,
+        imageFile: uploadFile,
       });
 
       setResult(finalResult);

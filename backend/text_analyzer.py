@@ -1,14 +1,24 @@
 import re
 import logging
 from presidio_analyzer import AnalyzerEngine
+from presidio_analyzer.nlp_engine import NlpEngineProvider
 
 # Suppress overly verbose presidio logs
 logging.getLogger("presidio-analyzer").setLevel(logging.ERROR)
 
 class TextAnalyzer:
     def __init__(self):
-        print("Initializing NLP Engine (Presidio)...")
-        self.analyzer = AnalyzerEngine()
+        print("Initializing NLP Engine (Presidio with en_core_web_sm)...")
+        # Explicitly configure Presidio to use the lightweight spaCy model
+        # to prevent out-of-memory crashes on free cloud hosting instances.
+        configuration = {
+            "nlp_engine_name": "spacy",
+            "models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
+        }
+        provider = NlpEngineProvider(nlp_configuration=configuration)
+        nlp_engine = provider.create_engine()
+        
+        self.analyzer = AnalyzerEngine(nlp_engine=nlp_engine, supported_languages=["en"])
         print("NLP Engine Ready.")
 
     def analyze(self, text: str):
