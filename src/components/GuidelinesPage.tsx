@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { 
-  ArrowLeft, 
   Smartphone, 
   Image as ImageIcon, 
   CheckCircle, 

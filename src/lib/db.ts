@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, query, where, Timestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { AnalysisResult } from '../services/ai';
 
