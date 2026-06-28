@@ -86,6 +86,24 @@ export default function App() {
     }
   };
 
+  const detectPlatformFromUrl = (url: string) => {
+    const domain = url.toLowerCase();
+    if (domain.includes("instagram")) return "Instagram";
+    if (domain.includes("twitter") || domain.includes("x.com")) return "Twitter";
+    if (domain.includes("linkedin")) return "LinkedIn";
+    if (domain.includes("facebook") || domain.includes("fb.com")) return "Facebook";
+    return null;
+  };
+
+  const handleUrlChange = (val: string) => {
+    setPostUrl(val);
+    const detected = detectPlatformFromUrl(val);
+    if (detected) {
+      setPlatform(detected);
+    }
+  };
+
+
   const loadSampleData = () => {
     const sample =
       sampleDataList[Math.floor(Math.random() * sampleDataList.length)];
@@ -326,7 +344,7 @@ export default function App() {
                     <div className="flex gap-2">
                       <input
                         value={postUrl}
-                        onChange={(e) => setPostUrl(e.target.value)}
+                        onChange={(e) => handleUrlChange(e.target.value)}
                         placeholder="https://instagram.com/p/..."
                         className="flex-1 bg-[#03010b] border border-white/20 rounded-lg p-3.5 text-sm text-white placeholder-slate-500 font-medium focus:outline-none focus:border-[#1DA1F2] focus:ring-1 focus:ring-[#1DA1F2]/50 transition-all shadow-inner"
                       />

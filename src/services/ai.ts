@@ -19,7 +19,7 @@ export interface AnalysisResult {
 
 // Dynamic API Routing: Pings local server, falls back to Cloud if offline
 export const getApiUrl = async (): Promise<string> => {
-  const cloudUrl = import.meta.env.VITE_API_URL || "https://social-check.onrender.com";
+  const cloudUrl = import.meta.env.VITE_API_URL ;
   
   if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
     try {
